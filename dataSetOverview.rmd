@@ -1,0 +1,175 @@
+---
+title: "Overview over training dataset and summary statistics"
+author: "Rifat"
+date: "August 27, 2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library(SPARQL)
+library(plyr)
+library(dplyr)
+library(dtplyr)
+library(ggplot2)
+library('knitr')
+
+endpoint="http://4v.dia.fi.upm.es:14007/sparql"
+
+```
+
+## Overview
+
+SPQRQL Endpoint http://4v.dia.fi.upm.es:14007/sparql
+
+-- List of Graph
+
+```{r echo=FALSE}
+
+  query<-"select ?graph (COUNT(?s) as ?SCount) where { graph ?graph{?s a ?o}} group by ?graph"
+  qd <- SPARQL(endpoint,query)
+  df <- qd$results
+  
+  kable( df, format = "markdown")
+```
+
+-- task2 list of classess
+
+```{r echo=FALSE}
+  query<-"SELECT DISTINCT ?c
+    WHERE {
+     GRAPH<http://iswc2017.semanticweb.org/task2> 
+        {[] a ?c .}
+    }"
+
+  qd <- SPARQL(endpoint,query)
+  df <- qd$results
+  
+  class<-c(1)
+  dt<-as.data.frame(class)
+  
+  for(i in 1:ncol(df)){
+    dt[i,]=df[,i]  
+  }
+  
+  kable( dt, format = "markdown")
+  
+  query<-"SELECT ?p (COUNT(?p) AS ?pCount)
+    WHERE {
+      GRAPH <http://iswc2017.semanticweb.org/task2> {
+        ?s ?p ?o .
+      }}
+    GROUP BY ?p"
+  
+  qd <- SPARQL(endpoint,query)
+  df <- qd$results
+  kable( df, format = "markdown")
+  
+```
+
+-- Person training 
+
+```{r echo=FALSE}
+
+ query_person<-"SELECT DISTINCT ?c
+    WHERE {
+     GRAPH<http://iswc2017.semanticweb.org/person> 
+        {[] a ?c .}
+    }"
+
+  qd <- SPARQL(endpoint,query_person)
+  df_person <- qd$results
+  
+  class<-c(1)
+  dt_person<-as.data.frame(class)
+  
+  for(i in 1:ncol(df_person)){
+    dt_person[i,]=df_person[,i]  
+  }
+  
+  kable( dt_person, format = "markdown")
+  
+   query<-"SELECT ?p (COUNT(?p) AS ?pCount)
+    WHERE {
+      GRAPH <http://iswc2017.semanticweb.org/person> {
+        ?s ?p ?o .
+      }}
+    GROUP BY ?p"
+  
+  qd <- SPARQL(endpoint,query)
+  dfPropertyPerson <- qd$results
+  kable( dfPropertyPerson, format = "markdown")
+  
+```
+
+
+-- Organization training 
+
+```{r echo=FALSE}
+
+  query<-"SELECT DISTINCT ?c
+    WHERE {
+     GRAPH<http://iswc2017.semanticweb.org/organization.nt> 
+        {[] a ?c .}
+    }"
+
+
+  qd <- SPARQL(endpoint,query)
+  df <- qd$results
+  
+  
+  class<-c(1)
+  
+  dt<-as.data.frame(class)
+
+  for(i in 1:ncol(df)){
+    dt[i,]=df[,i]
+    query<-paste0("SELECT (COUNT(?s) AS ?entityCount)
+      WHERE {
+       GRAPH <http://iswc2017.semanticweb.org/organization.nt> {
+         ?s ?p ?o .
+         ?s a ", dt[i,] ,".
+        }
+     }")
+    qd <- SPARQL(endpoint,query)
+    df <- qd$results
+    print(df)
+  }
+  
+  kable( dt, format = "markdown")
+  
+     query<-"SELECT ?p (COUNT(?p) AS ?pCount)
+    WHERE {
+      GRAPH <http://iswc2017.semanticweb.org/organization.nt> {
+        ?s ?p ?o .
+      }}
+    GROUP BY ?p"
+  
+  qd <- SPARQL(endpoint,query)
+  dfPropertyOrg <- qd$results
+  kable( dfPropertyOrg, format = "markdown")
+  
+```
+
+
+
+The following predicates will be used in scoring the challenge
+
+http://ont.thomsonreuters.com/mdaas/isDomiciledIn
+
+http://permid.org/ontology/organization/hasLatestOrganizationFoundedDate
+
+http://permid.org/ontology/organization/hasHeadquartersPhoneNumber
+
+```{r echo=FALSE}
+
+# stPerson<-dfPropertyPerson$p[dfPropertyPerson$p=="<http://ont.thomsonreuters.com/mdaas/isDomiciledIn>" || dfPropertyPerson$p=="<http://permid.org/ontology/organization/hasLatestOrganizationFoundedDate>" || dfPropertyPerson$p=="<http://permid.org/ontology/organization/hasHeadquartersPhoneNumber>"]
+# 
+# kable( stPerson, format = "markdown")
+# 
+# 
+# stOrg<-dfPropertyOrg[dfPropertyOrg$p=="<http://ont.thomsonreuters.com/mdaas/isDomiciledIn>" || dfPropertyOrg$p=="<http://permid.org/ontology/organization/hasLatestOrganizationFoundedDate>" || dfPropertyOrg$p=="<http://permid.org/ontology/organization/hasHeadquartersPhoneNumber>"]
+# 
+# 
+# kable( stOrg, format = "markdown")
+
+```
